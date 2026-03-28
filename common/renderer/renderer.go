@@ -56,7 +56,7 @@ func glError(handle uint32, statusType uint32, getIV func(uint32, uint32, *int32
 	}
 }
 
-func Init() {
+func Init(clearColor [3]float32) {
 	glShaderSource := func(handle uint32, source string) {
 		csource, free := gl.Strs(source + "\x00")
 		defer free()
@@ -73,7 +73,7 @@ func Init() {
 	f.width = 100
 	f.height = 100
 
-	gl.ClearColor(0.2, 0.3, 0.3, 1.0)
+	gl.ClearColor(clearColor[0], clearColor[1], clearColor[2], 1.0)
 	gl.Enable(gl.CULL_FACE)
 	gl.CullFace(gl.BACK)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)

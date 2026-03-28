@@ -2,16 +2,15 @@
 package common
 
 import (
+	"CimguiTest/common/nodeExample"
 	"CimguiTest/common/renderer"
 	_ "embed"
 	"fmt"
 
 	cte "github.com/AllenDang/cimgui-go/ImGuiColorTextEdit"
 	"github.com/AllenDang/cimgui-go/imgui"
+	"github.com/AllenDang/cimgui-go/imnodes"
 
-	_ "github.com/AllenDang/cimgui-go/immarkdown"
-	_ "github.com/AllenDang/cimgui-go/imnodes"
-	_ "github.com/AllenDang/cimgui-go/impl/opengl3"
 	"github.com/AllenDang/cimgui-go/implot"
 	"github.com/AllenDang/cimgui-go/utils"
 )
@@ -38,6 +37,7 @@ func Initialize() {
 	for i := 0; i < 10; i++ {
 		barValues = append(barValues, int64(i+1))
 	}
+	nodeExample.Init()
 }
 
 func InputTextCallback(data imgui.InputTextCallbackData) int {
@@ -49,6 +49,8 @@ var clearColor [3]float32
 var objectColor [3]float32
 
 func AfterCreateContext() {
+	imnodes.CreateContext()
+	imnodes.PushAttributeFlag(imnodes.AttributeFlagsEnableLinkDetachWithDragClick)
 	implot.CreateContext()
 	textEditor = cte.NewTextEditor()
 	textEditor.SetLanguageDefinition(cte.Cpp)
@@ -56,10 +58,10 @@ func AfterCreateContext() {
 #include <iostream>
 ImGui::Text("Hello World")`)
 
-	clearColor = [3]float32{0.0, 0.0, 0.0}
+	clearColor = [3]float32{0.2, 0.3, 0.3}
 	objectColor = [3]float32{1.0, 0.5, 0.2}
 
-	renderer.Init()
+	renderer.Init(clearColor)
 }
 
 func BeforeDestroyContext() {
@@ -83,6 +85,7 @@ func Loop() {
 	ShowPictureLoadingDemo()
 	ShowImPlotDemo()
 	ShowCTEDemo()
+	nodeExample.Show()
 }
 
 func ShowWidgetsDemo() {
@@ -161,6 +164,7 @@ func ShowCTEDemo() {
 	imgui.Begin("Color Text Edit")
 
 	if textEditor.Render("Color Text Edit") {
+
 	}
 
 	imgui.End()
