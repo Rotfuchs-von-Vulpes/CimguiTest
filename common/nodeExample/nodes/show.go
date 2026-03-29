@@ -37,8 +37,8 @@ func (s *Show) GetOutput(id int32) (bool, Value) {
 }
 
 func (s *Show) SetInput(id int32, input Value) bool {
-	if id == s.inId && input.typ == t_float32 {
-		s.amount = input.data.(float32)
+	if id == s.inId && input.Typ == t_float32 {
+		s.amount = input.Data.(float32)
 		return true
 	}
 	return false
@@ -50,6 +50,10 @@ func (s *Show) OutputList() []int32 {
 
 func (s *Show) InputList() []int32 {
 	return []int32{s.inId}
+}
+
+func (s *Show) Type() NodeKind {
+	return NodeShow
 }
 
 type ShowColor struct {
@@ -79,12 +83,12 @@ func (s *ShowColor) Show() {
 }
 
 func (s *ShowColor) GetOutput(id int32) (bool, Value) {
-	return false, Value{t_null, nil}
+	return true, Value{t_3float32, s.color}
 }
 
 func (s *ShowColor) SetInput(id int32, input Value) bool {
-	if id == s.inId && input.typ == t_3float32 {
-		s.color = input.data.([3]float32)
+	if id == s.inId && input.Typ == t_3float32 {
+		s.color = input.Data.([3]float32)
 		return true
 	}
 	return false
@@ -96,4 +100,8 @@ func (s *ShowColor) OutputList() []int32 {
 
 func (s *ShowColor) InputList() []int32 {
 	return []int32{s.inId}
+}
+
+func (s *ShowColor) Type() NodeKind {
+	return NodeShowColor
 }

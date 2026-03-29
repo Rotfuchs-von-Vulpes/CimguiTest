@@ -114,8 +114,8 @@ func (s *Oscillator) GetOutput(id int32) (bool, Value) {
 }
 
 func (s *Oscillator) SetInput(id int32, input Value) bool {
-	if s.inId == id && input.typ == t_float32 {
-		s.osc.Freq = s.freq + s.freqA*input.data.(float32)
+	if s.inId == id && input.Typ == t_float32 {
+		s.osc.Freq = s.freq + s.freqA*input.Data.(float32)
 		return true
 	}
 	return false
@@ -127,4 +127,8 @@ func (s *Oscillator) OutputList() []int32 {
 
 func (s *Oscillator) InputList() []int32 {
 	return []int32{s.inId}
+}
+
+func (s *Oscillator) Type() NodeKind {
+	return NodeOscillator
 }

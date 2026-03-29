@@ -36,6 +36,7 @@ type NodeBlock interface {
 	Show()
 	InputList() []int32
 	OutputList() []int32
+	Type() n.NodeKind
 	GetOutput(id int32) (bool, n.Value)
 	SetInput(id int32, data n.Value) bool
 }
@@ -45,31 +46,23 @@ var (
 	links []link
 )
 
-type nodeKind int
-
-const (
-	n_Constant nodeKind = iota
-	n_Show
-	n_Color
-	n_ShowColor
-	n_Oscillator
-	// n_WaveShaper
-	// n_Mixer
-)
-
-func addNode(kind nodeKind) {
+func addNode(kind n.NodeKind) {
 	var node NodeBlock
 	switch kind {
-	case n_Constant:
+	case n.NodeConstant:
 		node = &n.Constant{}
-	case n_Oscillator:
+	case n.NodeOscillator:
 		node = &n.Oscillator{}
-	case n_Show:
+	case n.NodeShow:
 		node = &n.Show{}
-	case n_Color:
+	case n.NodeColor:
 		node = &n.ColorConstant{}
-	case n_ShowColor:
+	case n.NodeShowColor:
 		node = &n.ShowColor{}
+	case n.NodeColorMixer:
+		node = &n.MixerColor{}
+	default:
+		return
 	}
 	node.Init()
 	nodes = append(nodes, node)
@@ -127,13 +120,43 @@ func findOutputById(id int32) *NodeBlock {
 	return nil
 }
 
+type nodeData struct {
+	typ     n.NodeKind
+	id      int32
+	inputs  []int32
+	outputs []int32
+}
+
+type linkData struct {
+	id    int32
+	start int32
+	end   int32
+}
+
+type nodesData struct {
+	nodes []nodeData
+	links []linkData
+}
+
+func saveData() {
+	var linksList []linkData
+
+	for _, link := range links {
+		linksList = append(linksList, linkData{link.id, link.start, link.end})
+	}
+}
+
+var ctx *imnodes.EditorContext
+var first = true
+
 func Init() {
-	addNode(n_Constant)
-	addNode(n_Show)
-	addNode(n_Oscillator)
-	addNode(n_Oscillator)
-	addNode(n_Color)
-	addNode(n_ShowColor)
+	addNode(n.NodeOscillator)
+	addNode(n.NodeOscillator)
+	addNode(n.NodeColor)
+	addNode(n.NodeColor)
+	addNode(n.NodeColorMixer)
+	addNode(n.NodeShowColor)
+	ctx = imnodes.EditorContextCreate()
 }
 
 func Show() {
@@ -144,6 +167,8 @@ func Show() {
 			if !end.SetInput(link.end, data) {
 				removeLink(link.id)
 			}
+		} else {
+			removeLink(link.id)
 		}
 	}
 
@@ -152,6 +177,11 @@ func Show() {
 	imgui.SetNextWindowSizeV(imgui.NewVec2(650, 400), imgui.CondOnce)
 
 	imgui.Begin("ImNodes Demo")
+	imnodes.EditorContextSet(ctx)
+	if first {
+		first = false
+		imnodes.LoadCurrentEditorStateFromIniFile("imnodes.ini")
+	}
 
 	imnodes.BeginNodeEditor()
 	if imgui.IsItemHovered() && imgui.IsMouseDoubleClicked(imgui.MouseButtonLeft) {
@@ -172,6 +202,8 @@ func Show() {
 	imnodes.MiniMapV(0.25, imnodes.MiniMapLocationBottomRight, func(arg0 int32, arg1 unsafe.Pointer) {}, imnodes.MiniMapNodeHoveringCallbackUserData{})
 
 	imnodes.EndNodeEditor()
+
+	imnodes.SaveEditorStateToIniFile(ctx, "imnodes.ini")
 
 	{
 		var link link
@@ -198,4 +230,19 @@ func Show() {
 	}
 
 	imgui.End()
+}
+
+var Color [3]float32
+
+func Get() [3]float32 {
+	for _, node := range nodes {
+		if node.Type() == n.NodeShowColor {
+			if ok, color := node.GetOutput(0); ok {
+				if final, ok := color.Data.([3]float32); ok {
+					return final
+				}
+			}
+		}
+	}
+	return Color
 }

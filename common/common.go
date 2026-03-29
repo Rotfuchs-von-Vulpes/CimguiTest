@@ -38,6 +38,7 @@ func Initialize() {
 		barValues = append(barValues, int64(i+1))
 	}
 	nodeExample.Init()
+	nodeExample.Color = clearColor
 }
 
 func InputTextCallback(data imgui.InputTextCallbackData) int {
@@ -86,6 +87,7 @@ func Loop() {
 	ShowImPlotDemo()
 	ShowCTEDemo()
 	nodeExample.Show()
+	clearColor = nodeExample.Get()
 }
 
 func ShowWidgetsDemo() {
@@ -139,7 +141,7 @@ func ShowPictureLoadingDemo() {
 	imgui.SetNextWindowSizeV(imgui.NewVec2(300, 185), imgui.CondOnce)
 	imgui.Begin("Image")
 	imgui.ImageWithBgV(tex, renderer.Size(), imgui.NewVec2(0, 1), imgui.NewVec2(1, 0), imgui.NewVec4(0, 0, 0, 0), imgui.NewVec4(1, 1, 1, 1))
-	imgui.ColorEdit3("clear color", &clearColor)   // Edit 3 floats representing a color
+	// imgui.ColorEdit3("clear color", &clearColor)   // Edit 3 floats representing a color
 	imgui.ColorEdit3("object color", &objectColor) // Edit 3 floats representing a color
 	imgui.End()
 }

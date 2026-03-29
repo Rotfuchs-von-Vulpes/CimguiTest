@@ -50,6 +50,10 @@ func (s *Constant) InputList() []int32 {
 	return []int32{}
 }
 
+func (s *Constant) Type() NodeKind {
+	return NodeConstant
+}
+
 type ColorConstant struct {
 	id    int32
 	outId int32
@@ -90,4 +94,8 @@ func (s *ColorConstant) OutputList() []int32 {
 
 func (s *ColorConstant) InputList() []int32 {
 	return []int32{}
+}
+
+func (s *ColorConstant) Type() NodeKind {
+	return NodeColor
 }

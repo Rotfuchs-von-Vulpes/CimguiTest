@@ -16,6 +16,18 @@ const (
 )
 
 type Value struct {
-	typ  DataType
-	data any
+	Typ  DataType
+	Data any
 }
+
+type NodeKind int
+
+const (
+	NodeConstant NodeKind = iota
+	NodeShow
+	NodeColor
+	NodeShowColor
+	NodeOscillator
+	// n_WaveShaper
+	NodeColorMixer
+)
