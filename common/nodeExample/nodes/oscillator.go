@@ -1,11 +1,34 @@
 package nodes
 
 import (
-	"CimguiTest/common/nodeExample/nodes/wave"
-
 	"github.com/AllenDang/cimgui-go/imgui"
 	"github.com/AllenDang/cimgui-go/imnodes"
+
+	"math"
 )
+
+type wave struct {
+	Freq       float32
+	Amp        float32
+	Phase      float32
+	ammount    float32
+	sampleRate float32
+}
+
+func newOscillator(freq, amp, phase, rate float32) wave {
+	return wave{freq, amp, phase, 0, rate}
+}
+
+func (s *wave) sample() (sample float32) {
+	sample = s.Amp * float32(math.Sin(float64(s.ammount+s.Phase)))
+
+	s.ammount += 2 * math.Pi * s.Freq / s.sampleRate
+	if s.ammount > 2*math.Pi {
+		s.ammount -= 2 * math.Pi
+	}
+
+	return sample
+}
 
 const SAMPLE_COUNT int32 = 100
 
@@ -15,7 +38,7 @@ type Oscillator struct {
 	inId        int32
 	freqA       float32
 	freq        float32
-	osc         wave.Oscillator
+	osc         wave
 	plot        [SAMPLE_COUNT]float32
 	refreshTime float64
 	last        float32
@@ -27,7 +50,7 @@ func (s *Oscillator) Init() {
 	s.outId = IdGen()
 	s.last = 0
 	s.freq = 4
-	s.osc = wave.NewOscillator(s.freq, 1, 0, 100)
+	s.osc = newOscillator(s.freq, 1, 0, 100)
 	for i := range s.plot {
 		s.plot[i] = 0
 	}
@@ -57,7 +80,7 @@ func (s *Oscillator) Show() {
 		}
 		newSamples := []float32{}
 		for s.refreshTime < imgui.Time() {
-			newSamples = append(newSamples, s.osc.Sample())
+			newSamples = append(newSamples, s.osc.sample())
 			s.refreshTime += 1.0 / 60
 		}
 		if len(newSamples) > 0 {
