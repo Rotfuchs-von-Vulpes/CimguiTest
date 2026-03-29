@@ -150,7 +150,9 @@ func Show() {
 	basePos := imgui.MainViewport().Pos()
 	imgui.SetNextWindowPosV(imgui.NewVec2(basePos.X+440, basePos.Y+440), imgui.CondOnce, imgui.NewVec2(0, 0))
 	imgui.SetNextWindowSizeV(imgui.NewVec2(650, 400), imgui.CondOnce)
+
 	imgui.Begin("ImNodes Demo")
+
 	imnodes.BeginNodeEditor()
 	if imgui.IsItemHovered() && imgui.IsMouseDoubleClicked(imgui.MouseButtonLeft) {
 		imnodes.StyleColorsClassic()
@@ -168,6 +170,7 @@ func Show() {
 
 	imnodes.ClearMiniMapNodeHoveringCallbackPool()
 	imnodes.MiniMapV(0.25, imnodes.MiniMapLocationBottomRight, func(arg0 int32, arg1 unsafe.Pointer) {}, imnodes.MiniMapNodeHoveringCallbackUserData{})
+
 	imnodes.EndNodeEditor()
 
 	{
