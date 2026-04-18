@@ -33,24 +33,39 @@ func (s *wave) sample() (sample float32) {
 const SAMPLE_COUNT int32 = 100
 
 type Oscillator struct {
-	id          int32
-	outId       int32
-	inId        int32
-	freqA       float32
-	freq        float32
+	Id          int32
+	OutId       int32
+	InId        int32
+	FreqA       float32
+	Freq        float32
+	Amp         float32
+	Phase       float32
 	osc         wave
 	plot        [SAMPLE_COUNT]float32
 	refreshTime float64
 	last        float32
 }
 
-func (s *Oscillator) Init() {
-	s.id = IdGen()
-	s.inId = IdGen()
-	s.outId = IdGen()
+func (s *Oscillator) Init(data any) {
+	if d, ok := data.(Oscillator); ok {
+		s.Id = d.Id
+		s.InId = d.InId
+		s.OutId = d.OutId
+		s.Amp = d.Amp
+		s.Phase = d.Phase
+		s.Freq = d.Freq
+		s.FreqA = d.FreqA
+	} else {
+		s.Id = IdGen()
+		s.InId = IdGen()
+		s.OutId = IdGen()
+		s.Amp = 1
+		s.Phase = 0
+		s.Freq = 4
+		s.FreqA = 0
+	}
 	s.last = 0
-	s.freq = 4
-	s.osc = newOscillator(s.freq, 1, 0, 100)
+	s.osc = newOscillator(s.Freq, s.Amp, s.Phase, 100)
 	for i := range s.plot {
 		s.plot[i] = 0
 	}
@@ -58,18 +73,18 @@ func (s *Oscillator) Init() {
 }
 
 func (s *Oscillator) Show() {
-	imnodes.BeginNode(s.id)
+	imnodes.BeginNode(s.Id)
 
 	imnodes.BeginNodeTitleBar()
 	imgui.Text("Oscillator")
 	imnodes.EndNodeTitleBar()
 
-	imnodes.BeginInputAttribute(s.inId)
+	imnodes.BeginInputAttribute(s.InId)
 	imgui.Text("Frequency Modulation")
-	imgui.DragFloatV("Ammount", &s.freqA, 1, -100, 100, "%.1f", 0)
+	imgui.DragFloatV("Ammount", &s.FreqA, 1, -100, 100, "%.1f", 0)
 	imnodes.EndInputAttribute()
-	if imgui.DragFloatV("Frequency", &s.freq, 0.25, 0, 100, "%.1f", 0) {
-		s.osc.Freq = s.freq
+	if imgui.DragFloatV("Frequency", &s.Freq, 0.25, 0, 100, "%.1f", 0) {
+		s.osc.Freq = s.Freq
 	}
 	imgui.DragFloatV("Phase", &s.osc.Phase, 0.25, 0, 100, "%.1f", 0)
 	imgui.DragFloatV("Amp", &s.osc.Amp, 0.25, 0, 1, "%.1f", 0)
@@ -98,7 +113,7 @@ func (s *Oscillator) Show() {
 		}
 	}
 
-	imnodes.BeginOutputAttribute(s.outId)
+	imnodes.BeginOutputAttribute(s.OutId)
 	imgui.Text("Out")
 	imgui.PlotLinesFloatPtrV("Data", &s.plot[0], SAMPLE_COUNT, 0, "", -1, 1, imgui.NewVec2(150, 25), 4)
 	imnodes.EndOutputAttribute()
@@ -107,26 +122,26 @@ func (s *Oscillator) Show() {
 }
 
 func (s *Oscillator) GetOutput(id int32) (bool, Value) {
-	if id == s.outId {
+	if id == s.OutId {
 		return true, Value{t_float32, s.last}
 	}
 	return false, Value{t_null, nil}
 }
 
 func (s *Oscillator) SetInput(id int32, input Value) bool {
-	if s.inId == id && input.Typ == t_float32 {
-		s.osc.Freq = s.freq + s.freqA*input.Data.(float32)
+	if s.InId == id && input.Typ == t_float32 {
+		s.osc.Freq = s.Freq + s.FreqA*input.Data.(float32)
 		return true
 	}
 	return false
 }
 
 func (s *Oscillator) OutputList() []int32 {
-	return []int32{s.outId}
+	return []int32{s.OutId}
 }
 
 func (s *Oscillator) InputList() []int32 {
-	return []int32{s.inId}
+	return []int32{s.InId}
 }
 
 func (s *Oscillator) Type() NodeKind {

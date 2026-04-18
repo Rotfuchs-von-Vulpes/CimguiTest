@@ -1,6 +1,9 @@
 package nodeExample
 
 import (
+	"encoding/gob"
+	"fmt"
+	"os"
 	"slices"
 	"unsafe"
 
@@ -32,7 +35,7 @@ func (s *connection) poke(in float32) {
 }
 
 type NodeBlock interface {
-	Init()
+	Init(data any)
 	Show()
 	InputList() []int32
 	OutputList() []int32
@@ -46,7 +49,7 @@ var (
 	links []link
 )
 
-func addNode(kind n.NodeKind) {
+func addNode(kind n.NodeKind, data any) {
 	var node NodeBlock
 	switch kind {
 	case n.NodeConstant:
@@ -64,7 +67,7 @@ func addNode(kind n.NodeKind) {
 	default:
 		return
 	}
-	node.Init()
+	node.Init(data)
 	nodes = append(nodes, node)
 }
 
@@ -121,28 +124,76 @@ func findOutputById(id int32) *NodeBlock {
 }
 
 type nodeData struct {
-	typ     n.NodeKind
-	id      int32
-	inputs  []int32
-	outputs []int32
+	Typ          n.NodeKind
+	InternalData any
 }
 
 type linkData struct {
-	id    int32
-	start int32
-	end   int32
+	Id    int32
+	Start int32
+	End   int32
 }
 
 type nodesData struct {
-	nodes []nodeData
-	links []linkData
+	Nodes  []nodeData
+	Links  []linkData
+	LastId int32
+}
+
+func loadData() {
+	var data nodesData
+	f, err := os.Open("nodesAppData.gob")
+	if err != nil {
+		addNode(n.NodeOscillator, nil)
+		addNode(n.NodeOscillator, nil)
+		addNode(n.NodeColor, nil)
+		addNode(n.NodeColor, nil)
+		addNode(n.NodeColorMixer, nil)
+		addNode(n.NodeShowColor, nil)
+		return
+	}
+	defer f.Close()
+	g := gob.NewDecoder(f)
+	if err := g.Decode(&data); err != nil {
+		fmt.Println(err)
+		return
+	}
+	n.LastId = data.LastId
+	for _, nodeData := range data.Nodes {
+		addNode(nodeData.Typ, nodeData.InternalData)
+	}
+	for _, linkData := range data.Links {
+		if startNode := findOutputById(linkData.Start); startNode != nil {
+			if endNode := findInputById(linkData.End); endNode != nil {
+				links = append(links, link{linkData.Id, linkData.Start, linkData.End, startNode, endNode})
+			}
+		}
+	}
 }
 
 func saveData() {
 	var linksList []linkData
+	var nodesList []nodeData
 
 	for _, link := range links {
 		linksList = append(linksList, linkData{link.id, link.start, link.end})
+	}
+	for _, node := range nodes {
+		nodesList = append(nodesList, nodeData{node.Type(), node})
+	}
+
+	data := nodesData{nodesList, linksList, n.LastId}
+	f, err := os.Create("nodesAppData.gob")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer f.Close()
+	g := gob.NewEncoder(f)
+	err = g.Encode(data)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 }
 
@@ -150,12 +201,13 @@ var ctx *imnodes.EditorContext
 var first = true
 
 func Init() {
-	addNode(n.NodeOscillator)
-	addNode(n.NodeOscillator)
-	addNode(n.NodeColor)
-	addNode(n.NodeColor)
-	addNode(n.NodeColorMixer)
-	addNode(n.NodeShowColor)
+	gob.Register(n.Oscillator{})
+	gob.Register(n.ColorConstant{})
+	gob.Register(n.MixerColor{})
+	gob.Register(n.ShowColor{})
+	gob.Register(n.Show{})
+	gob.Register(n.Constant{})
+	loadData()
 	ctx = imnodes.EditorContextCreate()
 }
 
@@ -177,6 +229,9 @@ func Show() {
 	imgui.SetNextWindowSizeV(imgui.NewVec2(650, 400), imgui.CondOnce)
 
 	imgui.Begin("ImNodes Demo")
+	if imgui.Button("Save") {
+		saveData()
+	}
 	imnodes.EditorContextSet(ctx)
 	if first {
 		first = false

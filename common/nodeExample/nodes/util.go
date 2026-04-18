@@ -1,10 +1,10 @@
 package nodes
 
-var lastId int32 = 0
+var LastId int32 = 0
 
 func IdGen() int32 {
-	lastId += 1
-	return lastId
+	LastId += 1
+	return LastId
 }
 
 type DataType int
