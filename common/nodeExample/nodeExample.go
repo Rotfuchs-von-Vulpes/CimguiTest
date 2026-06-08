@@ -140,6 +140,11 @@ type nodesData struct {
 	LastId int32
 }
 
+func eraseAll() {
+	nodes = []NodeBlock{}
+	links = []link{}
+}
+
 func loadData() {
 	var data nodesData
 	f, err := os.Open("nodesAppData.gob")
@@ -228,9 +233,37 @@ func Show() {
 	imgui.SetNextWindowPosV(imgui.NewVec2(basePos.X+440, basePos.Y+440), imgui.CondOnce, imgui.NewVec2(0, 0))
 	imgui.SetNextWindowSizeV(imgui.NewVec2(650, 400), imgui.CondOnce)
 
-	imgui.Begin("ImNodes Demo")
-	if imgui.Button("Save") {
-		saveData()
+	imgui.BeginV("ImNodes Demo", nil, imgui.WindowFlagsMenuBar)
+	if imgui.BeginMenuBar() {
+		if imgui.BeginMenu("Data") {
+			if imgui.MenuItemBool("Save") {
+				saveData()
+			}
+			if imgui.MenuItemBool("Reset") {
+				eraseAll()
+				loadData()
+			}
+			imgui.EndMenu()
+		}
+		if imgui.BeginMenu("New Node") {
+			if imgui.MenuItemBool("Constant") {
+				addNode(n.NodeConstant, nil)
+			}
+			if imgui.MenuItemBool("Color") {
+				addNode(n.NodeColor, nil)
+			}
+			if imgui.MenuItemBool("Color Mixer") {
+				addNode(n.NodeColorMixer, nil)
+			}
+			if imgui.MenuItemBool("Oscillator") {
+				addNode(n.NodeOscillator, nil)
+			}
+			if imgui.MenuItemBool("Show") {
+				addNode(n.NodeShow, nil)
+			}
+			imgui.EndMenu()
+		}
+		imgui.EndMenuBar()
 	}
 	imnodes.EditorContextSet(ctx)
 	if first {
