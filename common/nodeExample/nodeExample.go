@@ -293,28 +293,24 @@ func Show() {
 
 	imnodes.SaveEditorStateToIniFile(ctx, "imnodes.ini")
 
-	{
-		var link link
-		if imnodes.IsLinkCreatedBoolPtr(&link.start, &link.end) {
-			if ok, linkId := findLinkIdByEnd(link.end); ok {
-				removeLink(linkId)
-			}
-			link.id = n.IdGen()
-			if startNode := findOutputById(link.start); startNode != nil {
-				if endNode := findInputById(link.end); endNode != nil {
-					link.startNode = startNode
-					link.endNode = endNode
-					links = append(links, link)
-				}
+	var link link
+	if imnodes.IsLinkCreatedBoolPtr(&link.start, &link.end) {
+		if ok, linkId := findLinkIdByEnd(link.end); ok {
+			removeLink(linkId)
+		}
+		link.id = n.IdGen()
+		if startNode := findOutputById(link.start); startNode != nil {
+			if endNode := findInputById(link.end); endNode != nil {
+				link.startNode = startNode
+				link.endNode = endNode
+				links = append(links, link)
 			}
 		}
 	}
 
-	{
-		var linkId int32
-		if imnodes.IsLinkDestroyed(&linkId) {
-			removeLink(linkId)
-		}
+	var linkId int32
+	if imnodes.IsLinkDestroyed(&linkId) {
+		removeLink(linkId)
 	}
 
 	imgui.End()

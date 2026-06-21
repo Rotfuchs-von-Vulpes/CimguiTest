@@ -89,27 +89,25 @@ func (s *Oscillator) Show() {
 	imgui.DragFloatV("Phase", &s.osc.Phase, 0.25, 0, 100, "%.1f", 0)
 	imgui.DragFloatV("Amp", &s.osc.Amp, 0.25, 0, 1, "%.1f", 0)
 
-	{
-		if s.refreshTime == 0 {
-			s.refreshTime = imgui.Time()
-		}
-		newSamples := []float32{}
-		for s.refreshTime < imgui.Time() {
-			newSamples = append(newSamples, s.osc.sample())
-			s.refreshTime += 1.0 / 60
-		}
-		if len(newSamples) > 0 {
-			s.last = newSamples[len(newSamples)-1]
-		}
+	if s.refreshTime == 0 {
+		s.refreshTime = imgui.Time()
+	}
+	newSamples := []float32{}
+	for s.refreshTime < imgui.Time() {
+		newSamples = append(newSamples, s.osc.sample())
+		s.refreshTime += 1.0 / 60
+	}
+	if len(newSamples) > 0 {
+		s.last = newSamples[len(newSamples)-1]
+	}
 
-		shift := len(newSamples)
-		if shift > 0 {
-			if shift >= int(SAMPLE_COUNT) {
-				copy(s.plot[:], newSamples[shift-len(s.plot):])
-			} else {
-				copy(s.plot[:], s.plot[shift:])
-				copy(s.plot[int(SAMPLE_COUNT)-shift:], newSamples)
-			}
+	shift := len(newSamples)
+	if shift > 0 {
+		if shift >= int(SAMPLE_COUNT) {
+			copy(s.plot[:], newSamples[shift-len(s.plot):])
+		} else {
+			copy(s.plot[:], s.plot[shift:])
+			copy(s.plot[int(SAMPLE_COUNT)-shift:], newSamples)
 		}
 	}
 
