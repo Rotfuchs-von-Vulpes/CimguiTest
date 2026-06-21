@@ -2,6 +2,7 @@ package nodeExample
 
 import (
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"os"
 	"slices"
@@ -149,13 +150,14 @@ func loadData() {
 	var data nodesData
 	f, err := os.Open("nodesAppData.gob")
 	if err != nil {
-		addNode(n.NodeOscillator, nil)
-		addNode(n.NodeOscillator, nil)
-		addNode(n.NodeColor, nil)
-		addNode(n.NodeColor, nil)
-		addNode(n.NodeColorMixer, nil)
-		addNode(n.NodeShowColor, nil)
-		return
+		if errors.Is(err, os.ErrNotExist) {
+			f, err = os.Open("nodesAppData_default.gob")
+			if err != nil {
+				panic("Cant read default data")
+			}
+		} else {
+			return
+		}
 	}
 	defer f.Close()
 	g := gob.NewDecoder(f)
@@ -268,6 +270,28 @@ func Show() {
 	imnodes.EditorContextSet(ctx)
 	if first {
 		first = false
+		f, err := os.Open("imnodes.ini")
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				f1, err := os.Open("imnodes_default.ini")
+				if err != nil {
+					panic("Cant read default imnodes.ini")
+				}
+				defer f1.Close()
+				f2, err := os.Create("imnodes.ini")
+				if err != nil {
+					panic("Cant create imnodes.ini")
+				}
+				defer f2.Close()
+				_, err = f1.WriteTo(f2)
+				if err != nil {
+					panic("Cant copy data")
+				}
+			} else {
+				panic("Cant read imnodes.ini")
+			}
+		}
+		f.Close()
 		imnodes.LoadCurrentEditorStateFromIniFile("imnodes.ini")
 	}
 
